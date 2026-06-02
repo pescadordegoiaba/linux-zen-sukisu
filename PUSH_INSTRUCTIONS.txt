@@ -1,0 +1,83 @@
+PUSH INSTRUCTIONS - linux-zen-sukisu (SukiSU adapted kernel source fork)
+
+The directory you are in is a ready git repo containing the FULL adapted kernel source:
+- linux-zen 7.0.9 + zen1 patches
+- SukiSU-Ultra kernel code vendored in drivers/kernelsu/
+- SUSFS port + all hooks integrated (fs/susfs.c and call sites)
+- Correct Kconfig / Makefile entries
+- Reference config.x86_64 (KSU + KPM + SUSFS + binder enabled)
+- packaging/ (PKGBUILD, compile.py, install script, SUSFS patch)
+- sukisu-manager/ (matching SukiSU manager debug APK + metadata + small README)
+- SukiSU-Ultra/ (git submodule with full SukiSU-Ultra source, including manager/ at the exact commit used for this adaptation)
+
+GitHub repo (already created):
+https://github.com/pescadordegoiaba/linux-zen-sukisu
+
+Current status on GitHub:
+- Only small placeholder commits on main (we used the GitHub API to create the repo and seed a README).
+- The real history (single large root commit + tag v7.0.9.zen1-sukisu) lives locally here.
+- When you push --force, it will replace the placeholder history with the real source. This is the intended final state.
+
+=== STEP-BY-STEP TO PUBLISH ===
+
+1. Authenticate gh CLI (this also sets up git credentials for https push):
+
+   gh auth login --hostname github.com --git-protocol https --web --skip-ssh-key
+
+   - It will print a one-time code and a URL: https://github.com/login/device
+   - Open the URL in your browser (on any machine), log in with your GitHub account, and paste the code.
+   - Latest known good code (as of the last attempt): 490E-4F53
+   - Older codes you may have seen (2DA7-CFBD, C8BB-4C22, ...) are stale — always use the most recent one printed by the login command.
+
+   After success you should see something like:
+     github.com
+     ✓ Logged in to github.com account pescadordegoiaba
+
+2. Push the real source (this is the big one — first push of the full kernel tree):
+
+   git remote -v   # should show the correct origin (fix below if needed)
+   git push -u origin main --force
+   git push --tags --force
+
+   This will take time and bandwidth (full source + git objects). Be patient.
+
+3. After the push succeeds, polish the repository:
+
+   gh repo edit pescadordegoiaba/linux-zen-sukisu \
+     --description "Linux ZEN kernel source fork with SukiSU-Ultra + SUSFS fully integrated and adapted (x86_64 desktop + Waydroid ready)" \
+     --homepage "https://github.com/SukiSU-Ultra/SukiSU-Ultra" \
+     --add-topic linux-kernel,zen-kernel,sukisu,kernelsu,susfs,root,waydroid,android,x86_64
+
+   # Optional: create a release pointing at the tag
+   gh release create v7.0.9.zen1-sukisu \
+     --title "v7.0.9.zen1-sukisu" \
+     --notes "Full source snapshot of linux-zen 7.0.9.zen1 with SukiSU-Ultra + SUSFS adapted. See the README inside the tree for build instructions."
+
+4. (Optional) Clean up this file from history later:
+   git rm PUSH_INSTRUCTIONS.txt
+   git commit -m "docs: remove push instructions (now published)"
+   git push
+
+=== Troubleshooting ===
+
+- If "git remote -v" looks weird (e.g. "originhttps..."), run:
+    git remote remove origin
+    git remote add origin https://github.com/pescadordegoiaba/linux-zen-sukisu.git
+
+- The remote is already correctly set in .git/config. The display quirk above does not affect pushes.
+
+- To verify the tree before pushing:
+    git log --oneline -1
+    git tag -l
+    ls drivers/kernelsu/ fs/susfs.c packaging/arch/
+
+- After push, anyone can build with:
+    git clone --branch v7.0.9.zen1-sukisu https://github.com/pescadordegoiaba/linux-zen-sukisu.git
+    cd linux-zen-sukisu
+    git submodule update --init --recursive   # get SukiSU-Ultra manager source
+    cp config.x86_64 .config
+    make LLVM=1 LLVM_IAS=1 -j$(nproc)
+
+The full detailed README is inside the tree (it will appear after the force-push).
+
+Repo created and prepared on 2026-06-02 by the kernel-builds automation for pescadordegoiaba.
