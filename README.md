@@ -1,4 +1,4 @@
-# linux-zen-sukisu
+# linux-zen-sukisu (Incomplete and No Working's)
 
 Linux ZEN kernel (v7.0.9.zen1) with **SukiSU-Ultra** and **SUSFS** fully integrated and adapted.
 
